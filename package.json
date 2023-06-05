@@ -1,0 +1,22 @@
+{
+  "name": "daj",
+  "version": "1.0.0",
+  "description": "Una librería de JS que te permite manejar datos en tu aplicación, estos datos se guardan en el sistema como archivos de tipo JSON.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LuisEduardoFrias/DaJ.git"
+  },
+  "author": "luis eduardo frias",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/LuisEduardoFrias/DaJ/issues"
+  },
+  "homepage": "https://github.com/LuisEduardoFrias/DaJ#readme",
+  "dependencies": {
+    "js-guid": "^1.0.2"
+  }
+}
