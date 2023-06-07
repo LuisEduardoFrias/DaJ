@@ -18,7 +18,7 @@ class Personas extends daj {
    }
 }
 
-const embutido = new Aniamales("puchi", 'iguana', 5);
+const embutido = new Aniamales("puchi", "iguana", 5);
 let maria = new Personas("maria", "riberas", 5.4);
 
 gate.set((r) => console.log(r), maria);
