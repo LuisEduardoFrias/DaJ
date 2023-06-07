@@ -18,6 +18,33 @@ const errors = {
    isNotObject: "'obj' is not an object",
 };
 
+const lock = () => {
+   //reid
+   /*fs.chmodSync(db_name, 0o400);*/
+   //wraid
+   /*fs.chmodSync(db_name, 0o200);*/
+};
+
+const unlock = (rw) => {
+   //reid
+   if (rw) {
+      // fs.chmodSync(db_name, 0o4);
+   } else {
+      //wraid
+      //fs.chmodSync(db_name, 0o2);
+   }
+   /*   console.log("usuario asignar");
+   fs.chownSync(db_name, 1541, 999);
+
+   fs.chmodSync(db_name, 0o4);
+   console.log("usuario 0o4");
+   fs.chmodSync(db_name, 0o2);
+   console.log("usuario 0o2");
+   fs.chmodSync(db_name, 0o1);
+   console.log("usuario 0o1");
+*/
+};
+
 function createFileDb(callback) {
    if (!fs.existsSync(db_name)) {
       console.log(`The data file does create.`);
@@ -36,7 +63,7 @@ function createFileDb(callback) {
          callback(undefined);
       });
    } else {
-      getAll(callback);
+      new gate().getAll(callback);
    }
 }
 
@@ -61,192 +88,180 @@ function argumentsCheck(arg) {
    });
 }
 
-const lock = (rw) => {
-   //reid
-   if (rw) {
-      /*fs.chmodSync(db_name, 0o400);*/
-   } else {
-      //wraid
-      /*fs.chmodSync(db_name, 0o200);*/
-   }
-};
+class gate {
+   get(callback, obj) {
+      argumentsCheck({ callback: callback, obj: obj });
 
-const unlock = (rw) => {
-   //reid
-   if (rw) {
-      // fs.chmodSync(db_name, 0o4);
-   } else {
-      //wraid
-      //fs.chmodSync(db_name, 0o2);
-   }
-   /*   console.log("usuario asignar");
-   fs.chownSync(db_name, 1541, 999);
-
-   fs.chmodSync(db_name, 0o4);
-   console.log("usuario 0o4");
-   fs.chmodSync(db_name, 0o2);
-   console.log("usuario 0o2");
-   fs.chmodSync(db_name, 0o1);
-   console.log("usuario 0o1");
-*/
-};
-
-function set(callback, obj) {
-   unlock(false);
-
-   argumentsCheck({ callback: callback, obj: obj });
-
-   createFileDb((allData) => {
-      function isSetAllData(getObjAllData) {
-         if (Reflect.set(allData, obj.constructor.name, getObjAllData)) {
-            throw errors.notAdd;
+      fs.readFile(db_name, (err, data) => {
+         if (err) {
+            throw err;
          }
-      }
 
-      if (allData !== undefined) {
-         let getObjAllData = Reflect.get(allData, obj.constructor.name);
+         let newObj = {};
 
-         if (getObjAllData !== undefined) {
-            if (Array.isArray(getObjAllData)) {
-               getObjAllData.push(obj);
-            } else {
-               const aux = getObjAllData;
-               getObjAllData = [];
-               getObjAllData.push(aux);
-               getObjAllData.push(obj);
-            }
-
-            isSetAllData(getObjAllData);
-         } else {
-            isSetAllData(objgetObjAllData);
+         try {
+            newObj = JSON.parse(data);
+         } catch {
+            callback(errors.notData);
          }
-      } else {
-         isSetAllData(getObjAllData);
-      }
 
-      if (allData === undefined) {
-         throw errors.notData;
-      }
-
-      fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-         if (err) throw err;
+         callback(Reflect.get(newObj, obj.constructor.name));
       });
-   });
 
-   lock(false);
-}
-
-function setUp(callback, obj) {
-   unlock(false);
-
-   argumentsCheck({ callback: callback, obj: obj });
-
-   function replaceEleOfArray() {
-      for (const e in getObjAllData) {
-         if (getObjAllData[e].key == obj.key) {
-            getObjAllData[e] = obj;
-            break;
-         }
-      }
+      lock(true);
    }
 
-   getAll((allData) => {
-      function isSetAllData(getObjAllData) {
-         if (Reflect.set(allData, obj.constructor.name, getObjAllData)) {
-            throw errors.notAdd;
+   getAll(callback) {
+      argumentsCheck({ callback: callback });
+
+      fs.readFile(db_name, (err, data) => {
+         if (err) {
+            throw err;
          }
-      }
 
-      if (allData !== undefined) {
-         let getObjAllData = Reflect.get(allData, obj.constructor.name);
+         let newObj = {};
+         let isError = false;
 
-         if (getObjAllData !== undefined) {
-            if (Array.isArray(getObjAllData)) {
-               replaceEleOfArray(getObjAllData);
-            } else {
-               const aux = getObjAllData;
-               getObjAllData = [];
-               getObjAllData.push(aux);
-               replaceEleOfArray(obj);
-            }
-
-            isSetAllData(getObjAllData);
-         } else {
-            isSetAllData(getObjAllData);
+         try {
+            newObj = JSON.parse(data);
+         } catch {
+            isError = true;
+            callback(errors.notData);
          }
-      } else {
-         isSetAllData(getObjAllData);
-      }
 
-      if (allData !== undefined) {
-         throw errors.notData;
-      }
-
-      fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-         if (err) callback(err);
+         if (!isError) callback(newObj);
       });
-   });
 
-   lock(false);
-}
+      lock(true);
+   }
 
-function getAll(callback) {
-   unlock(true);
+   getKey(callback, obj, key) {
+      argumentsCheck({ callback: callback, obj: obj, key, key });
 
-   argumentsCheck({ callback: callback });
+      fs.readFile(db_name, (err, data) => {
+         if (err) {
+            throw err;
+         }
 
-   fs.readFile(db_name, (err, data) => {
-      if (err) {
-         throw err;
-      }
+         let newObj = {};
 
-      callback(JSON.parse(data));
-   });
+         try {
+            newObj = JSON.parse(data);
+         } catch {
+            callback(errors.notData);
+         }
 
-   lock(true);
-}
+         const value = Reflect.get(newObj, obj.constructor.name);
 
-function get(callback, obj) {
-   unlock(true);
+         for (var arr in value) {
+            if (value[arr].key === key) {
+               callback(value[arr]);
+            }
+         }
+      });
 
-   argumentsCheck({ callback: callback, obj: obj });
+      lock(true);
+   }
 
-   fs.readFile(db_name, (err, data) => {
-      if (err) {
-         throw err;
-      }
+   set(callback, obj) {
+      argumentsCheck({ callback: callback, obj: obj });
 
-      callback(Reflect.get(JSON.parse(data), obj.constructor.name));
-   });
+      createFileDb((allData) => {
+         function isSetAllData(objData, newProtype) {
+            if (newProtype) allData = {};
 
-   lock(true);
-}
+            if (!Reflect.set(allData, obj.constructor.name, objData)) {
+               throw errors.notAdd;
+            }
+         }
 
-function getKey(callback, obj, key) {
-   unlock(true);
+         if (allData !== undefined && allData !== errors.notData) {
+            let getObjAllData = Reflect.get(allData, obj.constructor.name);
 
-   argumentsCheck({ callback: callback, obj: obj, key, key });
+            if (getObjAllData !== undefined) {
+               if (Array.isArray(getObjAllData)) {
+                  getObjAllData.push(obj);
+               } else {
+                  const aux = getObjAllData;
+                  getObjAllData = [];
+                  getObjAllData.push(aux);
+                  getObjAllData.push(obj);
+               }
 
-   fs.readFile(db_name, (err, data) => {
-      if (err) {
-         throw err;
-      }
-      const value = Reflect.get(JSON.parse(data), obj.constructor.name);
+               isSetAllData(getObjAllData);
+            } else {
+               isSetAllData(obj, true);
+            }
+         } else {
+            isSetAllData(obj, true);
+         }
 
-      for (var arr in value) {
-         if (value[arr].key === key) {
-            callback(value[arr]);
-            break;
+         if (allData === undefined) {
+            throw errors.notData;
+         }
+
+         fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+            if (err) throw err;
+         });
+      });
+
+      lock(false);
+   }
+
+   setUp(callback, obj) {
+      argumentsCheck({ callback: callback, obj: obj });
+
+      function replaceEleOfArray() {
+         for (const e in getObjAllData) {
+            if (getObjAllData[e].key == obj.key) {
+               getObjAllData[e] = obj;
+               break;
+            }
          }
       }
-   });
 
-   lock(true);
+      getAll((allData) => {
+         function isSetAllData(objData, newProtype) {
+            if (newProtype) allData = {};
+
+            if (!Reflect.set(allData, obj.constructor.name, objData)) {
+               throw errors.notAdd;
+            }
+         }
+
+         if (allData !== undefined && allData !== errors.notData) {
+            let getObjAllData = Reflect.get(allData, obj.constructor.name);
+
+            if (getObjAllData !== undefined) {
+               if (Array.isArray(getObjAllData)) {
+                  replaceEleOfArray(getObjAllData);
+               } else {
+                  const aux = getObjAllData;
+                  getObjAllData = [];
+                  getObjAllData.push(aux);
+                  replaceEleOfArray(obj);
+               }
+
+               isSetAllData(getObjAllData);
+            } else {
+               isSetAllData(obj, true);
+            }
+         } else {
+            isSetAllData(obj, true);
+         }
+
+         if (allData !== undefined) {
+            throw errors.notData;
+         }
+
+         fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+            if (err) callback(err);
+         });
+      });
+
+      lock(false);
+   }
 }
 
-module.exports.get = get;
-module.exports.getAll = getAll;
-module.exports.getKey = getKey;
-module.exports.set = set;
-module.exports.setUp = setUp;
+module.exports.gate = new gate();
 module.exports.daj = daj;
