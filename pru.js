@@ -1,18 +1,15 @@
-const { daj, get, set } = require("./index.js");
+const { daj, gate } = require("./index.js");
 
-class Producto extends daj {
-   constructor(nombre, precio) {
+class Aniamales extends daj {
+   constructor(nombre, tipo, edad) {
       super();
       this.nombre = nombre;
-      this.precio = precio;
-   }
-
-   getData() {
-      return `${nombre} ${precio}`;
+      this.tipo = tipo;
+      this.edad = edad;
    }
 }
 
-class PersonaX extends daj {
+class Personas extends daj {
    constructor(nombre, edad, altura) {
       super();
       this.nombre = nombre;
@@ -21,20 +18,9 @@ class PersonaX extends daj {
    }
 }
 
-const embutido = new Producto("salami induveca", 250.99);
-let maria = new PersonaX("maria", "riberas", 5.4);
+const embutido = new Aniamales("puchi", 'iguana', 5);
+let maria = new Personas("maria", "riberas", 5.4);
 
-//console.log(embutido.constructor.name);
-//set((r) => console.log("set: " + r), maria);
+gate.set((r) => console.log(r), maria);
 
-get((e) => {
-   console.log("get: " + JSON.stringify(e));
-}, maria);
-
-// usersApi.js
-/*
-export async function getUsers(): Promise<Array<Object>> {
-  const response = await fetch('https://example.com/api/users');
-  const data = await response.json();
-  return data;
-}*/
+gate.get((e) => console.log("get: " + JSON.stringify(e)), maria);
