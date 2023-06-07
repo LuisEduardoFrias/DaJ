@@ -1,17 +1,40 @@
-const daj = require("./index.js");
+const { daj, get, set } = require("./index.js");
 
-const ob = {};
+class Producto extends daj {
+   constructor(nombre, precio) {
+      super();
+      this.nombre = nombre;
+      this.precio = precio;
+   }
 
-function json(value) {
-   console.log(value);
+   getData() {
+      return `${nombre} ${precio}`;
+   }
 }
 
-ob.json = json;
+class PersonaX extends daj {
+   constructor(nombre, edad, altura) {
+      super();
+      this.nombre = nombre;
+      this.edad = edad;
+      this.altura = altura;
+   }
+}
 
-daj.getAll(ob);
+const embutido = new Producto("salami induveca", 250.99);
+let maria = new PersonaX("maria", "riberas", 5.4);
 
-const persona = new daj.Class("animales");
-persona.nombre = "princesa";
-persona.rasa = "perro";
+//console.log(embutido.constructor.name);
+//set((r) => console.log("set: " + r), maria);
 
-//daj.set(ob, persona);
+get((e) => {
+   console.log("get: " + JSON.stringify(e));
+}, maria);
+
+// usersApi.js
+/*
+export async function getUsers(): Promise<Array<Object>> {
+  const response = await fetch('https://example.com/api/users');
+  const data = await response.json();
+  return data;
+}*/
