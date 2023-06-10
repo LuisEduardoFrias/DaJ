@@ -19,8 +19,12 @@ class Personas extends daj {
 }
 
 const embutido = new Aniamales("puchi", "iguana", 5);
-let maria = new Personas("maria", "riberas", 5.4);
+let maria = new Personas("prueba", "erase", 1.1);
 
-gate.set((r) => console.log(r), maria);
+gate.setUp((r) => console.log(r), maria);
 
 gate.get((e) => console.log("get: " + JSON.stringify(e)), maria);
+
+//maria.key = '715f451d-71ae-45fb-b8ce-39c4e417f132';
+//gate.delete((e) => {}, maria);
+//gate.get((e) => console.log("get: " + JSON.stringify(e)), maria);
