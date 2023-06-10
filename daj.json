@@ -80,6 +80,18 @@
          "nombre": "maria",
          "edad": "riberas",
          "altura": 5.4
+      },
+      {
+         "key": "843f32a2-15d3-4ea1-923f-ef9d557771e0",
+         "nombre": "prueba",
+         "edad": "erase",
+         "altura": 1.1
+      },
+      {
+         "key": "ec50395e-93da-45f0-8295-ebfa138a894a",
+         "nombre": "prueba2",
+         "edad": "erase2.2",
+         "altura": 1.5
       }
    ]
 }
