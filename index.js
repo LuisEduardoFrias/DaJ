@@ -211,16 +211,16 @@ class gate {
    setUp(callback, obj) {
       argumentsCheck({ callback: callback, obj: obj });
 
-      function replaceEleOfArray() {
-         for (const e in getObjAllData) {
-            if (getObjAllData[e].key == obj.key) {
-               getObjAllData[e] = obj;
+      function replaceEleOfArray(objToReplace) {
+         for (const e in objToReplace) {
+            if (objToReplace[e].key == obj.key) {
+               objToReplace[e] = obj;
                break;
             }
          }
       }
 
-      getAll((allData) => {
+      this.getAll((allData) => {
          function isSetAllData(objData, newProtype) {
             if (newProtype) allData = {};
 
@@ -230,19 +230,19 @@ class gate {
          }
 
          if (allData !== undefined && allData !== errors.notData) {
-            let getObjAllData = Reflect.get(allData, obj.constructor.name);
+            let specificObj = Reflect.get(allData, obj.constructor.name);
 
-            if (getObjAllData !== undefined) {
-               if (Array.isArray(getObjAllData)) {
-                  replaceEleOfArray(getObjAllData);
+            if (specificObj !== undefined) {
+               if (Array.isArray(specificObj)) {
+                  replaceEleOfArray(specificObj);
                } else {
-                  const aux = getObjAllData;
-                  getObjAllData = [];
-                  getObjAllData.push(aux);
-                  replaceEleOfArray(obj);
+                  const aux = specificObj;
+                  specificObj = [];
+                  specificObj.push(aux);
+                  replaceEleOfArray(specificObj);
                }
 
-               isSetAllData(getObjAllData);
+               isSetAllData(specificObj);
             } else {
                isSetAllData(obj, true);
             }
@@ -250,7 +250,7 @@ class gate {
             isSetAllData(obj, true);
          }
 
-         if (allData !== undefined) {
+         if (allData === undefined) {
             throw errors.notData;
          }
 
@@ -260,6 +260,44 @@ class gate {
       });
 
       lock(false);
+   }
+
+   delete(callback, obj) {
+      argumentsCheck({ callback: callback, obj: obj });
+
+      this.getAll((allData) => {
+         function isSetAllData(objData) {
+            if (!Reflect.set(allData, obj.constructor.name, objData)) {
+               throw errors.notAdd;
+            }
+         }
+
+         if (allData !== undefined && allData !== errors.notData) {
+            let specificObj = Reflect.get(allData, obj.constructor.name);
+
+            if (specificObj !== undefined) {
+               if (Array.isArray(specificObj)) {
+                  const index = specificObj.findIndex((e) => e.key === obj.key);
+
+                  if (index > -1) {
+                     specificObj.splice(index, 1);
+                  }
+
+                  isSetAllData(specificObj);
+               } else {
+                  Reflect.deleteProperty(allData, obj.constructor.name);
+               }
+            } else {
+               throw errors.notData;
+            }
+
+            fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+               if (err) callback(err);
+            });
+         } else {
+            throw errors.notData;
+         }
+      });
    }
 }
 
