@@ -15,9 +15,12 @@ const errors = {
    callBack: "A 'callback' is require.",
    key: "'key' value is require.",
    objectRequite: "'obj' value is require.",
+   notDataAccess: "not may accesss to the data.",
    isNotObject: "'obj' is not an object",
 };
 
+// TODO crear un log file de errores
+//TODO verificar y activar permisos de escritura y lectira de archico
 const lock = () => {
    //reid
    /*fs.chmodSync(db_name, 0o400);*/
@@ -45,6 +48,7 @@ const unlock = (rw) => {
 */
 };
 
+//TODO validar error al crear el archivo.
 function createFileDb(callback) {
    if (!fs.existsSync(db_name)) {
       console.log(`The data file does create.`);
@@ -94,18 +98,23 @@ class gate {
 
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            throw err;
+            // console.log(err);
+            callback(errors.notDataAccess, null);
+         } else {
+            let newObj = {};
+            let isError = false;
+
+            try {
+               newObj = JSON.parse(data);
+            } catch {
+               isError = true;
+               callback(errors.notData, null);
+            }
+
+            if (!isError) {
+               callback(null, Reflect.get(newObj, obj.constructor.name));
+            }
          }
-
-         let newObj = {};
-
-         try {
-            newObj = JSON.parse(data);
-         } catch {
-            callback(errors.notData);
-         }
-
-         callback(Reflect.get(newObj, obj.constructor.name));
       });
 
       lock(true);
@@ -116,20 +125,23 @@ class gate {
 
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            throw err;
+            // console.log(err);
+            callback(errors.notDataAccess, null);
+         } else {
+            let newObj = {};
+            let isError = false;
+
+            try {
+               newObj = JSON.parse(data);
+            } catch {
+               isError = true;
+               callback(errors.notData, null);
+            }
+
+            if (!isError) {
+               callback(null, newObj);
+            }
          }
-
-         let newObj = {};
-         let isError = false;
-
-         try {
-            newObj = JSON.parse(data);
-         } catch {
-            isError = true;
-            callback(errors.notData);
-         }
-
-         if (!isError) callback(newObj);
       });
 
       lock(true);
@@ -140,22 +152,31 @@ class gate {
 
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            throw err;
-         }
+            // console.log(err);
+            callback(errors.notDataAccess, null);
+         } else {
+            let newObj = {};
+            let isError = false;
 
-         let newObj = {};
+            try {
+               newObj = JSON.parse(data);
+            } catch {
+               isError = true;
+               callback(errors.notData, null);
+            }
 
-         try {
-            newObj = JSON.parse(data);
-         } catch {
-            callback(errors.notData);
-         }
+            if (!isError) {
+               const value = Reflect.get(newObj, obj.constructor.name);
 
-         const value = Reflect.get(newObj, obj.constructor.name);
-
-         for (var arr in value) {
-            if (value[arr].key === key) {
-               callback(value[arr]);
+               if (value !== undefined && value !== null) {
+                  for (var arr in value) {
+                     if (value[arr].key === key) {
+                        callback(null, value[arr]);
+                     }
+                  }
+               } else {
+                  callback(errors.notdata, null);
+               }
             }
          }
       });
@@ -171,10 +192,11 @@ class gate {
             if (newProtype) allData = {};
 
             if (!Reflect.set(allData, obj.constructor.name, objData)) {
-               throw errors.notAdd;
+               callback(errors.notAdd);
+               return true;
             }
          }
-
+         let isError = false;
          if (allData !== undefined && allData !== errors.notData) {
             let getObjAllData = Reflect.get(allData, obj.constructor.name);
 
@@ -188,21 +210,31 @@ class gate {
                   getObjAllData.push(obj);
                }
 
-               isSetAllData(getObjAllData);
+               isError = isSetAllData(getObjAllData);
             } else {
-               isSetAllData(obj, true);
+               isError = isSetAllData(obj, true);
             }
          } else {
-            isSetAllData(obj, true);
+            isError = isSetAllData(obj, true);
          }
 
-         if (allData === undefined) {
-            throw errors.notData;
-         }
+         if (!isError) {
+            if (allData === undefined) {
+               callback(errors.notData);
+               isArray = true;
+            }
 
-         fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-            if (err) throw err;
-         });
+            if (!isError) {
+               fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+                  if (err) {
+                     //  console.log(err);
+                     callback(errors.notDataAccess);
+                     isError = true;
+                  }
+                  if (!isError) callback(null);
+               });
+            }
+         }
       });
 
       lock(false);
@@ -225,9 +257,12 @@ class gate {
             if (newProtype) allData = {};
 
             if (!Reflect.set(allData, obj.constructor.name, objData)) {
-               throw errors.notAdd;
+               callback(errors.notAdd);
+               return true;
             }
          }
+
+         let isError = false;
 
          if (allData !== undefined && allData !== errors.notData) {
             let specificObj = Reflect.get(allData, obj.constructor.name);
@@ -242,21 +277,31 @@ class gate {
                   replaceEleOfArray(specificObj);
                }
 
-               isSetAllData(specificObj);
+               isError = isSetAllData(specificObj);
             } else {
-               isSetAllData(obj, true);
+               isError = isSetAllData(obj, true);
             }
          } else {
-            isSetAllData(obj, true);
+            isError = isSetAllData(obj, true);
          }
+         if (!isError) {
+            if (allData === undefined) {
+               callback(errors.notData);
+               isError = true;
+            }
 
-         if (allData === undefined) {
-            throw errors.notData;
+            if (!isError) {
+               fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+                  if (err) {
+                     // console.log(err);
+                     isError = true;
+                     callback(errors.notDataAccess);
+                  }
+
+                  if (!isError) callback(null);
+               });
+            }
          }
-
-         fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-            if (err) callback(err);
-         });
       });
 
       lock(false);
@@ -268,10 +313,11 @@ class gate {
       this.getAll((allData) => {
          function isSetAllData(objData) {
             if (!Reflect.set(allData, obj.constructor.name, objData)) {
-               throw errors.notAdd;
+               callback(errors.notAdd);
+               return true;
             }
          }
-
+         let isError = false;
          if (allData !== undefined && allData !== errors.notData) {
             let specificObj = Reflect.get(allData, obj.constructor.name);
 
@@ -283,19 +329,26 @@ class gate {
                      specificObj.splice(index, 1);
                   }
 
-                  isSetAllData(specificObj);
+                  isError = isSetAllData(specificObj);
                } else {
                   Reflect.deleteProperty(allData, obj.constructor.name);
                }
             } else {
-               throw errors.notData;
+               callback(errors.notData);
+               isError = true;
             }
-
-            fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-               if (err) callback(err);
-            });
+            if (!isError) {
+               fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+                  if (err) {
+                     console.log(err);
+                     callback(errors.notDataAccess, null);
+                     isError = true;
+                  }
+                  if (!isError) callback(null);
+               });
+            }
          } else {
-            throw errors.notData;
+            callback(errors.notData);
          }
       });
    }
