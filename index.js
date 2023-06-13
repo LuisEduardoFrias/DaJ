@@ -76,7 +76,6 @@ function createFileDb(callback) {
          callback(null);
       });
    } else {
-      console.log("llamads con get all");
       new gate().getAll(callback);
    }
 }
@@ -320,7 +319,7 @@ class gate {
             if (specificObj !== undefined) {
                if (Array.isArray(specificObj)) {
                   if (objIsArray) {
-                     specificObj = [...specificObj,...obj];
+                     specificObj = [...specificObj, ...obj];
                   } else {
                      specificObj.push(obj);
                   }
@@ -330,7 +329,7 @@ class gate {
                   specificObj.push(aux);
 
                   if (objIsArray) {
-                     specificObj = [...specificObj,...obj];
+                     specificObj = [...specificObj, ...obj];
                   } else {
                      specificObj.push(obj);
                   }
@@ -402,7 +401,7 @@ class gate {
             if (specificObj !== undefined) {
                if (Array.isArray(specificObj)) {
                   if (objIsArray) {
-                     specificObj = [...specificObj,...obj];
+                     specificObj = [...specificObj, ...obj];
                   } else {
                      specificObj.push(obj);
                   }
@@ -412,7 +411,7 @@ class gate {
                   specificObj.push(aux);
 
                   if (objIsArray) {
-                     specificObj = [...specificObj,...obj];
+                     specificObj = [...specificObj, ...obj];
                   } else {
                      specificObj.push(obj);
                   }
@@ -444,11 +443,12 @@ class gate {
    put(callback, obj) {
       argumentsCheck({ callback: callback, obj: obj });
 
+      let constructor_name;
+      constructor_name = obj.constructor.name;
+
       if (constructor_name === "Array") {
          callback(errors.arrayNot);
       } else {
-         let constructor_name;
-         constructor_name = obj.constructor.name;
          Reflect.deleteProperty(obj, "constructor");
 
          function replaceEleOfArray(objToReplace) {
@@ -516,11 +516,13 @@ class gate {
    putAsync(callback, obj) {
       argumentsCheck({ callback: callback, obj: obj });
 
+  let constructor_name;
+      constructor_name = obj.constructor.name;
+
       if (constructor_name === "Array") {
          return errors.arrayNot;
       }
-      let constructor_name;
-      constructor_name = obj.constructor.name;
+    
       Reflect.deleteProperty(obj, "constructor");
 
       function replaceEleOfArray(objToReplace) {
