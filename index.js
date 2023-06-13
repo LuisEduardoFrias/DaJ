@@ -320,7 +320,7 @@ class gate {
             if (specificObj !== undefined) {
                if (Array.isArray(specificObj)) {
                   if (objIsArray) {
-                     Array.concat(specificObj, obj);
+                     specificObj = [...specificObj,...obj];
                   } else {
                      specificObj.push(obj);
                   }
@@ -330,7 +330,7 @@ class gate {
                   specificObj.push(aux);
 
                   if (objIsArray) {
-                     Array.concat(specificObj, obj);
+                     specificObj = [...specificObj,...obj];
                   } else {
                      specificObj.push(obj);
                   }
@@ -402,7 +402,7 @@ class gate {
             if (specificObj !== undefined) {
                if (Array.isArray(specificObj)) {
                   if (objIsArray) {
-                     Array.concat(specificObj, obj);
+                     specificObj = [...specificObj,...obj];
                   } else {
                      specificObj.push(obj);
                   }
@@ -412,7 +412,7 @@ class gate {
                   specificObj.push(aux);
 
                   if (objIsArray) {
-                     Array.concat(specificObj, obj);
+                     specificObj = [...specificObj,...obj];
                   } else {
                      specificObj.push(obj);
                   }
