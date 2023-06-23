@@ -132,9 +132,8 @@ class gate {
 
       lock(true);
    }
-
    getAsync(obj) {
-      argumentsCheck({ callback: callback, obj: obj });
+      argumentsCheck({ obj: obj });
 
       let constructor_name;
       constructor_name = obj.constructor.name;
@@ -158,7 +157,6 @@ class gate {
 
       lock(true);
    }
-
    getAll(callback) {
       argumentsCheck({ callback: callback });
 
@@ -185,7 +183,6 @@ class gate {
 
       lock(true);
    }
-
    getAllAsync() {
       fs.readFile(db_name, (err, data) => {
          if (err) {
@@ -205,7 +202,6 @@ class gate {
 
       lock(true);
    }
-
    getKey(callback, obj, key) {
       argumentsCheck({ callback: callback, obj: obj, key, key });
 
@@ -246,7 +242,6 @@ class gate {
 
       lock(true);
    }
-
    getKeyAsync(obj, key) {
       argumentsCheck({ obj: obj, key, key });
 
@@ -281,7 +276,6 @@ class gate {
 
       lock(true);
    }
-
    post(callback, obj) {
       argumentsCheck({ callback: callback, obj: obj });
 
@@ -364,7 +358,6 @@ class gate {
 
       lock(false);
    }
-
    postAsync(obj) {
       argumentsCheck({ obj: obj });
 
@@ -439,7 +432,6 @@ class gate {
 
       lock(false);
    }
-
    put(callback, obj) {
       argumentsCheck({ callback: callback, obj: obj });
 
@@ -512,17 +504,16 @@ class gate {
       }
       lock(false);
    }
+   putAsync(obj) {
+      argumentsCheck({ obj: obj });
 
-   putAsync(callback, obj) {
-      argumentsCheck({ callback: callback, obj: obj });
-
-  let constructor_name;
+      let constructor_name;
       constructor_name = obj.constructor.name;
 
       if (constructor_name === "Array") {
          return errors.arrayNot;
       }
-    
+
       Reflect.deleteProperty(obj, "constructor");
 
       function replaceEleOfArray(objToReplace) {
@@ -578,7 +569,6 @@ class gate {
 
       lock(false);
    }
-
    delete(callback, obj) {
       argumentsCheck({ callback: callback, obj: obj });
 
@@ -628,9 +618,8 @@ class gate {
          }
       });
    }
-
-   deleteAsync(callback, obj) {
-      argumentsCheck({ callback: callback, obj: obj });
+   deleteAsync(obj) {
+      argumentsCheck({ obj: obj });
 
       let constructor_name;
       constructor_name = obj.constructor.name;
