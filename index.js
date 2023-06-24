@@ -15,6 +15,18 @@ class daj {
       });
       return JSON.stringify(this);
    }
+
+   djson(json) {
+      const obj = JSON.parse(json);
+      this.mapper(obj);
+   }
+
+   mapper(obj) {
+      const keys = Reflect.ownKeys(obj);
+      keys.forEach((key) => {
+         Reflect.set(this, key, obj[key]);
+      });
+   }
 }
 
 const errors = {
@@ -73,7 +85,7 @@ function createFileDb(callback) {
             });
          });*/
 
-         callback(null);
+         callback(null, null);
       });
    } else {
       new gate().getAll(callback);
@@ -111,7 +123,7 @@ class gate {
 
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            // console.log(err);
+            console.error(`DaJ: ${err}`);
             callback(errors.notDataAccess, null);
          } else {
             let newObj = {};
@@ -121,6 +133,7 @@ class gate {
                newObj = JSON.parse(data);
             } catch {
                isError = true;
+               console.log(errors.notData);
                callback(errors.notData, null);
             }
 
@@ -139,7 +152,13 @@ class gate {
       constructor_name = obj.constructor.name;
       Reflect.deleteProperty(obj, "constructor");
 
-      const dataReturn = fs.readFileSync(db_name);
+      let dataReturn;
+      try {
+         dataReturn = fs.readFileSync(db_name);
+      } catch (err) {
+         console.error(errors.notDataAccess);
+         return null;
+      }
 
       let newObj = {};
       let isError = false;
@@ -148,7 +167,8 @@ class gate {
          newObj = JSON.parse(dataReturn);
       } catch {
          isError = true;
-         return errors.notData;
+         console.log(errors.notData);
+         return null;
       }
 
       if (!isError) {
@@ -172,6 +192,7 @@ class gate {
                newObj = JSON.parse(data);
             } catch {
                isError = true;
+               console.log(errors.notData);
                callback(errors.notData, null);
             }
 
@@ -186,15 +207,16 @@ class gate {
    getAllAsync() {
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            // console.log(err);
-            return errors.notDataAccess;
+            console.error(errors.notDataAccess);
+            return null;
          }
          let newObj = {};
 
          try {
             newObj = JSON.parse(data);
          } catch {
-            return errors.notData;
+            console.log(errors.notData);
+            return null;
          }
 
          return newObj;
@@ -211,7 +233,7 @@ class gate {
 
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            // console.log(err);
+            console.log(errors.notDataAccess);
             callback(errors.notDataAccess, null);
          } else {
             let newObj = {};
@@ -221,6 +243,7 @@ class gate {
                newObj = JSON.parse(data);
             } catch {
                isError = true;
+               console.log(errors.notData);
                callback(errors.notData, null);
             }
 
@@ -234,6 +257,7 @@ class gate {
                      }
                   }
                } else {
+                  console.log(errors.notdata);
                   callback(errors.notdata, null);
                }
             }
@@ -249,17 +273,18 @@ class gate {
       constructor_name = obj.constructor.name;
       Reflect.deleteProperty(obj, "constructor");
 
-      fs.readFile(db_name, (err, data) => {
+      return fs.readFile(db_name, (err, data) => {
          if (err) {
-            // console.log(err);
-            return errors.notDataAccess;
+            console.error(errors.notDataAccess);
+            return null;
          }
          let newObj = {};
 
          try {
             newObj = JSON.parse(data);
          } catch {
-            return errors.notData;
+            console.log(errors.notData);
+            return null;
          }
 
          const value = Reflect.get(newObj, constructor_name);
@@ -271,7 +296,8 @@ class gate {
                }
             }
          }
-         return errors.notdata;
+         console.log(errors.notdata);
+         return null;
       });
 
       lock(true);
@@ -384,6 +410,7 @@ class gate {
             }
 
             if (!Reflect.set(allData, constructor_name, objData)) {
+               //console.log(errors.notAdd);
                return errors.notAdd;
             }
          }
@@ -422,11 +449,11 @@ class gate {
             return errors.notData;
          }
 
-         fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+         return fs.writeFile(db_name, JSON.stringify(allData), (err) => {
             if (err) {
                return errors.notDataAccess;
             }
-            callback(null);
+            return null;
          });
       });
 
@@ -557,7 +584,7 @@ class gate {
             return errors.notData;
          }
 
-         fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+         return fs.writeFile(db_name, JSON.stringify(allData), (err) => {
             if (err) {
                // console.log(err);
                return errors.notDataAccess;
@@ -651,7 +678,7 @@ class gate {
                return errors.notData;
             }
 
-            fs.writeFile(db_name, JSON.stringify(allData), (err) => {
+            return fs.writeFile(db_name, JSON.stringify(allData), (err) => {
                if (err) {
                   return errors.notDataAccess;
                }
