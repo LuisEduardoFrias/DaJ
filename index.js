@@ -3,6 +3,8 @@ const { Guid } = require("js-guid");
 const db_name = "./daj.json";
 
 const l = (e) => console.log(e);
+const error = (e) => console.error(e);
+
 //Data Archive Json
 class daj {
    constructor() {
@@ -69,13 +71,34 @@ const unlock = (rw) => {
 */
 };
 
-//TODO validar error al crear el archivo.
 function createFileDb(callback) {
    if (!fs.existsSync(db_name)) {
       console.log(`The data file does create.`);
 
       fs.appendFile(db_name, "", (err) => {
-         if (err) throw err;
+         if (err) {
+            callback(errors.notDataAccess, null);
+         } else {
+            /* fs.chmod(db_name, 0o400, (err) => {
+            if (err) throw err;
+            fs.chmod(db_name, 0o200, (err) => {
+               if (err) throw err;
+               callback(undefined);
+            });
+         });*/
+
+            callback(null, null);
+         }
+      });
+   } else {
+      new gate().getAll(callback);
+   }
+}
+
+function createFileDbAsync() {
+   if (!fs.existsSync(db_name)) {
+      try {
+         const response = fs.appendFileAsync(db_name, "");
 
          /* fs.chmod(db_name, 0o400, (err) => {
             if (err) throw err;
@@ -84,11 +107,13 @@ function createFileDb(callback) {
                callback(undefined);
             });
          });*/
-
-         callback(null, null);
-      });
+         console.log(`The data file does create.`);
+         return { error: null, data: null };
+      } catch {
+         return { error: errors.notDataAccess, data: null };
+      }
    } else {
-      new gate().getAll(callback);
+      return new gate().getAllAsync();
    }
 }
 
@@ -98,16 +123,16 @@ function argumentsCheck(arg) {
       switch (e) {
          case "callback": {
             if (typeof Reflect.get(arg, e) !== "function")
-               console.log(errors.callBack);
+               throw new TypeError(errors.callBack);
             break;
          }
          case "key": {
-            if (!e.isEmpty()) if (!Guid.isValid(e)) console.log(errors.keys);
+            if (!e=== "") if (!Guid.isValid(e)) throw new TypeError(errors.keys);
             break;
          }
          case "obj": {
             if (typeof Reflect.get(arg, e) !== "object")
-               console.log(errors.isNotObject);
+               throw new TypeError(errors.isNotObject);
          }
       }
    });
@@ -133,7 +158,7 @@ class gate {
                newObj = JSON.parse(data);
             } catch {
                isError = true;
-               console.log(errors.notData);
+               error(errors.notData);
                callback(errors.notData, null);
             }
 
@@ -152,27 +177,21 @@ class gate {
       constructor_name = obj.constructor.name;
       Reflect.deleteProperty(obj, "constructor");
 
-      let dataReturn;
       try {
-         dataReturn = fs.readFileSync(db_name);
+         let dataReturn = fs.readFileSync(db_name);
+
+         try {
+            return {
+               error: null,
+               data: Reflect.get(JSON.parse(dataReturn), constructor_name),
+            };
+         } catch {
+            error(errors.notData);
+            return { error: errors.notData, data: null };
+         }
       } catch (err) {
          console.error(errors.notDataAccess);
-         return null;
-      }
-
-      let newObj = {};
-      let isError = false;
-
-      try {
-         newObj = JSON.parse(dataReturn);
-      } catch {
-         isError = true;
-         console.log(errors.notData);
-         return null;
-      }
-
-      if (!isError) {
-         return Reflect.get(newObj, constructor_name);
+         return { error: errors.notDataAccess, data: null };
       }
 
       lock(true);
@@ -182,7 +201,7 @@ class gate {
 
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            // console.log(err);
+            error(err);
             callback(errors.notDataAccess, null);
          } else {
             let newObj = {};
@@ -192,7 +211,7 @@ class gate {
                newObj = JSON.parse(data);
             } catch {
                isError = true;
-               console.log(errors.notData);
+               error(errors.notData);
                callback(errors.notData, null);
             }
 
@@ -205,27 +224,23 @@ class gate {
       lock(true);
    }
    getAllAsync() {
-      fs.readFile(db_name, (err, data) => {
-         if (err) {
-            console.error(errors.notDataAccess);
-            return null;
-         }
-         let newObj = {};
-
+      try {
+         const data = fs.readFileSync(db_name);
          try {
-            newObj = JSON.parse(data);
+            return { error: null, data: JSON.parse(data) };
          } catch {
-            console.log(errors.notData);
-            return null;
+            error(errors.notData);
+            return { error: errors.notData, data: null };
          }
-
-         return newObj;
-      });
+      } catch {
+         console.error(errors.notDataAccess);
+         return { error: errors.notDataAccess, data: null };
+      }
 
       lock(true);
    }
    getKey(callback, obj, key) {
-      argumentsCheck({ callback: callback, obj: obj, key, key });
+      argumentsCheck({ callback: callback, obj: obj, key: key });
 
       let constructor_name;
       constructor_name = obj.constructor.name;
@@ -233,7 +248,7 @@ class gate {
 
       fs.readFile(db_name, (err, data) => {
          if (err) {
-            console.log(errors.notDataAccess);
+            error(errors.notDataAccess);
             callback(errors.notDataAccess, null);
          } else {
             let newObj = {};
@@ -243,7 +258,7 @@ class gate {
                newObj = JSON.parse(data);
             } catch {
                isError = true;
-               console.log(errors.notData);
+               error(errors.notData);
                callback(errors.notData, null);
             }
 
@@ -257,7 +272,7 @@ class gate {
                      }
                   }
                } else {
-                  console.log(errors.notdata);
+                  error(errors.notdata);
                   callback(errors.notdata, null);
                }
             }
@@ -267,38 +282,34 @@ class gate {
       lock(true);
    }
    getKeyAsync(obj, key) {
-      argumentsCheck({ obj: obj, key, key });
+      argumentsCheck({ obj: obj, key: key });
 
       let constructor_name;
       constructor_name = obj.constructor.name;
       Reflect.deleteProperty(obj, "constructor");
 
-      return fs.readFile(db_name, (err, data) => {
-         if (err) {
-            console.error(errors.notDataAccess);
-            return null;
-         }
-         let newObj = {};
+      try {
+         const data = fs.readFileSync(db_name);
 
          try {
-            newObj = JSON.parse(data);
-         } catch {
-            console.log(errors.notData);
-            return null;
-         }
+            const value = Reflect.get(JSON.parse(data), constructor_name);
 
-         const value = Reflect.get(newObj, constructor_name);
-
-         if (value !== undefined && value !== null) {
-            for (var arr in value) {
-               if (value[arr].key === key) {
-                  return value[arr];
+            if (value !== undefined && value !== null) {
+               for (var arr in value) {
+                  if (value[arr].key === key) {
+                     return { error: null, data: value[arr] };
+                  }
                }
+               return {error:errors.notData ,data:null};
             }
+         } catch {
+            error(errors.notData);
+            return { error: errors.notData, data: null };
          }
-         console.log(errors.notdata);
-         return null;
-      });
+      } catch {
+         console.error(errors.notDataAccess);
+         return { error: errors.notDataAccess, data: null };
+      }
 
       lock(true);
    }
@@ -372,7 +383,7 @@ class gate {
             if (!isError) {
                fs.writeFile(db_name, JSON.stringify(allData), (err) => {
                   if (err) {
-                     //  console.log(err);
+                     error(err);
                      callback(errors.notDataAccess);
                      isError = true;
                   }
@@ -403,59 +414,68 @@ class gate {
          }
       }
 
-      createFileDb((e, allData) => {
-         function isSetAllData(objData, newProtype) {
-            if (newProtype) {
-               allData = {};
-            }
+      const response = createFileDbAsync();
 
-            if (!Reflect.set(allData, constructor_name, objData)) {
-               //console.log(errors.notAdd);
-               return errors.notAdd;
-            }
+      if (response.error !== null) return { error: response.error, data: null };
+
+      const allData = response.data;
+
+      const isSetAllData = (objData, newProtype) => {
+         if (newProtype) {
+            allData = {};
          }
 
-         if (allData !== errors.notData && allData !== null) {
-            let specificObj = Reflect.get(allData, constructor_name);
+         if (!Reflect.set(allData, constructor_name, objData)) {
+            error(errors.notAdd);
+            //Todo este valor de retornl esta es tomado en cuenta
+            return { error: errors.notAdd, data: null };
+         }
+      };
 
-            if (specificObj !== undefined) {
-               if (Array.isArray(specificObj)) {
-                  if (objIsArray) {
-                     specificObj = [...specificObj, ...obj];
-                  } else {
-                     specificObj.push(obj);
-                  }
+      if (allData !== errors.notData && allData !== null) {
+         let specificObj = Reflect.get(allData, constructor_name);
+
+         if (specificObj !== undefined) {
+            if (Array.isArray(specificObj)) {
+               if (objIsArray) {
+                  specificObj = [...specificObj, ...obj];
                } else {
-                  const aux = specificObj;
-                  specificObj = [];
-                  specificObj.push(aux);
-
-                  if (objIsArray) {
-                     specificObj = [...specificObj, ...obj];
-                  } else {
-                     specificObj.push(obj);
-                  }
+                  specificObj.push(obj);
                }
-
-               isSetAllData(specificObj);
             } else {
-               isSetAllData(obj);
+               const aux = specificObj;
+               specificObj = [];
+               specificObj.push(aux);
+
+               if (objIsArray) {
+                  //Todo esto replasara un valor si es igual a otro no quiero  esto arreglar
+                  specificObj = [...specificObj, ...obj];
+               } else {
+                  specificObj.push(obj);
+               }
             }
+
+            isSetAllData(specificObj);
          } else {
-            isSetAllData(obj, true);
+            isSetAllData(obj);
          }
+      } else {
+         isSetAllData(obj, true);
+      }
 
-         if (allData === undefined) {
-            return errors.notData;
-         }
+      //Todo muy poco probablevq se devesta condicuon
+      if (allData === undefined) {
+         return { error: errors.notData, data: null };
+      }
 
-         return fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-            if (err) {
-               return errors.notDataAccess;
-            }
-            return null;
-         });
-      });
+      try {
+         return {
+            error: null,
+            data: fs.writeFileSync(db_name, JSON.stringify(allData)),
+         };
+      } catch {
+         return { error: errors.notData, data: null };
+      }
 
       lock(false);
    }
@@ -470,14 +490,14 @@ class gate {
       } else {
          Reflect.deleteProperty(obj, "constructor");
 
-         function replaceEleOfArray(objToReplace) {
+         const replaceEleOfArray = (objToReplace) => {
             for (const e in objToReplace) {
                if (objToReplace[e].key == obj.key) {
                   objToReplace[e] = obj;
                   break;
                }
             }
-         }
+         };
 
          this.getAll((e, allData) => {
             function isSetAllData(objData) {
@@ -518,7 +538,7 @@ class gate {
                if (!isError) {
                   fs.writeFile(db_name, JSON.stringify(allData), (err) => {
                      if (err) {
-                        // console.log(err);
+                        error(err);
                         isError = true;
                         callback(errors.notDataAccess);
                      }
@@ -538,7 +558,7 @@ class gate {
       constructor_name = obj.constructor.name;
 
       if (constructor_name === "Array") {
-         return errors.arrayNot;
+         return { error: errors.arrayNot, data: null };
       }
 
       Reflect.deleteProperty(obj, "constructor");
@@ -552,47 +572,44 @@ class gate {
          }
       }
 
-      this.getAll((e, allData) => {
-         function isSetAllData(objData) {
-            if (!Reflect.set(allData, constructor_name, objData)) {
-               return errors.notAdd;
-            }
+      const response = this.getAllAsync();
+
+      if (response.error !== null) return { error: response.error, data: null };
+
+      const allData = response.data;
+
+      function isSetAllData(objData) {
+         if (!Reflect.set(allData, constructor_name, objData)) {
+            return errors.notAdd;
          }
+      }
 
-         if (allData !== null && allData !== errors.notData) {
-            let specificObj = Reflect.get(allData, constructor_name);
+      if (allData !== null && allData !== errors.notData) {
+         let specificObj = Reflect.get(allData, constructor_name);
 
-            if (specificObj !== undefined) {
-               if (Array.isArray(specificObj)) {
-                  replaceEleOfArray(specificObj);
-               } else {
-                  const aux = specificObj;
-                  specificObj = [];
-                  specificObj.push(aux);
-                  replaceEleOfArray(specificObj);
-               }
-
-               isSetAllData(specificObj);
+         if (specificObj !== undefined) {
+            if (Array.isArray(specificObj)) {
+               replaceEleOfArray(specificObj);
             } else {
-               return errors.notData;
+               const aux = specificObj;
+               specificObj = [];
+               specificObj.push(aux);
+               replaceEleOfArray(specificObj);
             }
+
+            isSetAllData(specificObj);
          } else {
             return errors.notData;
          }
+      } else {
+         return errors.notData;
+      }
 
-         if (allData === undefined) {
-            return errors.notData;
-         }
+      if (allData === undefined) {
+         return errors.notData;
+      }
 
-         return fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-            if (err) {
-               // console.log(err);
-               return errors.notDataAccess;
-            }
-
-            return null;
-         });
-      });
+      return fs.writeFileSync(db_name, JSON.stringify(allData));
 
       lock(false);
    }
@@ -633,7 +650,7 @@ class gate {
             if (!isError) {
                fs.writeFile(db_name, JSON.stringify(allData), (err) => {
                   if (err) {
-                     console.log(err);
+                     error(err);
                      callback(errors.notDataAccess, null);
                      isError = true;
                   }
@@ -652,42 +669,46 @@ class gate {
       constructor_name = obj.constructor.name;
       Reflect.deleteProperty(obj, "constructor");
 
-      this.getAll((e, allData) => {
-         function isSetAllData(objData) {
-            if (!Reflect.set(allData, constructor_name, objData)) {
-               return errors.notAdd;
-            }
+      const response = this.getAllAsync();
+
+      if (response.error !== null) return { error: response.error, data: null };
+
+      const allData = response.data;
+
+      function isSetAllData(objData) {
+         if (!Reflect.set(allData, constructor_name, objData)) {
+            return errors.notAdd;
          }
+      }
 
-         if (allData !== null && allData !== errors.notData) {
-            let specificObj = Reflect.get(allData, constructor_name);
+      if (allData !== null && allData !== errors.notData) {
+         let specificObj = Reflect.get(allData, constructor_name);
 
-            if (specificObj !== undefined) {
-               if (Array.isArray(specificObj)) {
-                  const index = specificObj.findIndex((e) => e.key === obj.key);
+         if (specificObj !== undefined) {
+            if (Array.isArray(specificObj)) {
+               const index = specificObj.findIndex((e) => e.key === obj.key);
 
-                  if (index > -1) {
-                     specificObj.splice(index, 1);
-                  }
-
-                  isSetAllData(specificObj);
-               } else {
-                  Reflect.deleteProperty(allData, constructor_name);
+               if (index > -1) {
+                  specificObj.splice(index, 1);
                }
+
+               isSetAllData(specificObj);
             } else {
-               return errors.notData;
+               Reflect.deleteProperty(allData, constructor_name);
             }
-
-            return fs.writeFile(db_name, JSON.stringify(allData), (err) => {
-               if (err) {
-                  return errors.notDataAccess;
-               }
-               return null;
-            });
          } else {
-            return errors.notData;
+            return { error: errors.notData, data: null };
          }
-      });
+
+         try {
+            fs.writeFileSync(db_name, JSON.stringify(allData));
+            return { error: null, data: "Success" };
+         } catch {
+            return { error: errors.notDataAccess, data: null };
+         }
+      } else {
+         return { error: errors.notData, data: null };
+      }
    }
 }
 
