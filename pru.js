@@ -1,30 +1,42 @@
-const { daj, gate } = require("./index.js");
+const { daj, dajb } = require("./index.js");
 
-class Aniamales extends daj {
-   constructor(nombre, tipo, edad) {
-      super();
-      this.nombre = nombre;
-      this.tipo = tipo;
-      this.edad = edad;
-   }
+class Aniamals extends dajb {
+  constructor(nombre, tipo, edad) {
+    super();
+    this.nombre = nombre;
+    this.tipo = tipo;
+    this.edad = edad;
+  }
 }
 
-class Personas extends daj {
-   constructor(nombre, edad, altura) {
-      super();
-      this.nombre = nombre;
-      this.edad = edad;
-      this.altura = altura;
-   }
+class Person extends dajb {
+  constructor(nombre, edad, altura) {
+    super();
+    this.nombre = nombre;
+    this.edad = edad;
+    this.altura = altura;
+  }
 }
+/*
+const perro = new Aniamals("puchi", "iguana", 5);
+const jose = new Person("pepe luis", "meriñon", 3.1);
+const _res = daj.postAsync(jose);
 
-const embutido = new Aniamales("puchi", "iguana", 5);
-let maria = new Personas("prueba", "erase", 1.1);
+if (!_res?.error) {
+  console.log("data: " + JSON.stringify(_res?.data));
+} else {
+  console.log("error: " + _res?.error);
+}*/
 
-gate.setUp((r) => console.log(r), maria);
+//daj.get((e) => console.log("get: " + JSON.stringify(e)), new Person());
 
-gate.get((e) => console.log("get: " + JSON.stringify(e)), maria);
+const res = daj.getAsync(new Person());
+
+if (!res?.error) {
+  console.log("data: " + JSON.stringify(res?.data));
+} else {
+  console.log("error: " + res?.error);
+}
 
 //maria.key = '715f451d-71ae-45fb-b8ce-39c4e417f132';
-//gate.delete((e) => {}, maria);
 //gate.get((e) => console.log("get: " + JSON.stringify(e)), maria);
